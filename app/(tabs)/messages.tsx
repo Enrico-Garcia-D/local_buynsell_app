@@ -1,7 +1,7 @@
 // app/(tabs)/messages.tsx  — replace your existing file
 // ─────────────────────────────────────────────────────────────────────────────
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Timestamp } from 'firebase/firestore';
 import { auth } from '../../services/firebase';
 import { subscribeToConversations, Conversation } from '../../services/chatService';
+import { useTheme } from '../theme';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -32,6 +33,8 @@ function formatTime(ts: Timestamp | null | undefined): string {
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function MessagesTab() {
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
   const router = useRouter();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,7 +87,7 @@ export default function MessagesTab() {
         onPress={() => openChat(item)}
       >
         <View style={styles.convoAvatar}>
-          <Ionicons name="person" size={22} color="#0f766e" />
+          <Ionicons name="person" size={22} color={theme.primary} />
         </View>
         <View style={styles.convoBody}>
           <View style={styles.convoTop}>
@@ -116,7 +119,7 @@ export default function MessagesTab() {
 
       {!loading && conversations.length === 0 ? (
         <View style={styles.empty}>
-          <Ionicons name="chatbubbles-outline" size={52} color="#cbd5e1" />
+          <Ionicons name="chatbubbles-outline" size={52} color={theme.secondary} />
           <Text style={styles.emptyTitle}>No messages yet</Text>
           <Text style={styles.emptyText}>
             When buyers contact you, their messages will appear here.
@@ -134,32 +137,33 @@ export default function MessagesTab() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { paddingHorizontal: 20, paddingTop: 56, paddingBottom: 16 },
-  headerTitle: { fontSize: 26, fontWeight: '800', color: '#111827' },
-  list: { paddingHorizontal: 20 },
-  convoItem: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', gap: 12,
-  },
-  convoAvatar: {
-    width: 50, height: 50, borderRadius: 25,
-    backgroundColor: '#ccfbf1', alignItems: 'center', justifyContent: 'center',
-  },
-  convoBody: { flex: 1, gap: 2 },
-  convoTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  convoName: { fontSize: 15, fontWeight: '700', color: '#111827' },
-  convoTime: { fontSize: 12, color: '#94a3b8' },
-  convoItem2: { fontSize: 12, color: '#0f766e', fontWeight: '600' },
-  convoMsg: { fontSize: 13, color: '#64748b' },
-  convoMsgUnread: { fontWeight: '700', color: '#111827' },
-  badge: {
-    width: 22, height: 22, borderRadius: 11,
-    backgroundColor: '#0f766e', alignItems: 'center', justifyContent: 'center',
-  },
-  badgeText: { fontSize: 11, fontWeight: '800', color: '#fff' },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: '#111827' },
-  emptyText: { fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 21 },
-});
+const getStyles = (theme) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    header: { paddingHorizontal: 20, paddingTop: 56, paddingBottom: 16 },
+    headerTitle: { fontSize: 26, fontWeight: '800', color: theme.text },
+    list: { paddingHorizontal: 20 },
+    convoItem: {
+      flexDirection: 'row', alignItems: 'center',
+      paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: theme.surface, gap: 12,
+    },
+    convoAvatar: {
+      width: 50, height: 50, borderRadius: 25,
+      backgroundColor: theme.primarySoft, alignItems: 'center', justifyContent: 'center',
+    },
+    convoBody: { flex: 1, gap: 2 },
+    convoTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    convoName: { fontSize: 15, fontWeight: '700', color: theme.text },
+    convoTime: { fontSize: 12, color: theme.secondary },
+    convoItem2: { fontSize: 12, color: theme.primary, fontWeight: '600' },
+    convoMsg: { fontSize: 13, color: theme.subtext },
+    convoMsgUnread: { fontWeight: '700', color: theme.text },
+    badge: {
+      width: 22, height: 22, borderRadius: 11,
+      backgroundColor: theme.primary, alignItems: 'center', justifyContent: 'center',
+    },
+    badgeText: { fontSize: 11, fontWeight: '800', color: theme.primaryText },
+    empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 12 },
+    emptyTitle: { fontSize: 18, fontWeight: '800', color: theme.text },
+    emptyText: { fontSize: 14, color: theme.subtext, textAlign: 'center', lineHeight: 21 },
+  });

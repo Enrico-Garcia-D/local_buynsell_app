@@ -2,9 +2,11 @@ import { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { auth } from '../services/firebase';
+import { useTheme } from './theme';
 
 export default function Index() {
   const router = useRouter();
+  const theme = useTheme();
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -15,11 +17,11 @@ export default function Index() {
       }
     });
     return unsubscribe;
-  }, []);
+  }, [router]);
 
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <ActivityIndicator size="large" color="#0f766e" />
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.background }}>
+      <ActivityIndicator size="large" color={theme.primary} />
     </View>
   );
 }

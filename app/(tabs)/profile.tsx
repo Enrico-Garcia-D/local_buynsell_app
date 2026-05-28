@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { signOut } from "../../services/auth";
 import { auth, db } from "../../services/firebase";
+import { useTheme } from "../theme";
 import {
   doc,
   getDoc,
@@ -22,6 +23,8 @@ import {
 } from "firebase/firestore";
 
 export default function ProfileTab() {
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [totalListings, setTotalListings] = useState(0);
@@ -99,7 +102,7 @@ export default function ProfileTab() {
           {user?.photoURL ? (
             <Image source={{ uri: user.photoURL }} style={styles.avatarImage} />
           ) : (
-            <Ionicons name="person" size={36} color="#0f766e" />
+            <Ionicons name="person" size={36} color={theme.primary} />
           )}
         </View>
         <View style={styles.userInfo}>
@@ -110,7 +113,7 @@ export default function ProfileTab() {
             {user?.email ?? auth.currentUser?.email ?? "—"}
           </Text>
           <View style={styles.verifiedBadge}>
-            <Ionicons name="shield-checkmark" size={13} color="#0f766e" />
+            <Ionicons name="shield-checkmark" size={13} color={theme.primary} />
             <Text style={styles.verifiedText}>Verified member</Text>
           </View>
         </View>
@@ -141,24 +144,24 @@ export default function ProfileTab() {
           activeOpacity={0.8}
           onPress={() => router.push("/my-listings")}
         >
-          <Ionicons name="list" size={20} color="#0f766e" />
+          <Ionicons name="list" size={20} color={theme.primary} />
           <Text style={styles.menuLabel}>My Listings</Text>
-          <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
+          <Ionicons name="chevron-forward" size={18} color={theme.secondary} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.menuItem} activeOpacity={0.8}>
-          <Ionicons name="heart" size={20} color="#0f766e" />
+          <Ionicons name="heart" size={20} color={theme.primary} />
           <Text style={styles.menuLabel}>Saved Items</Text>
-          <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
+          <Ionicons name="chevron-forward" size={18} color={theme.secondary} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.menuItem} activeOpacity={0.8}>
-          <Ionicons name="star" size={20} color="#0f766e" />
+          <Ionicons name="star" size={20} color={theme.primary} />
           <Text style={styles.menuLabel}>Reviews</Text>
-          <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
+          <Ionicons name="chevron-forward" size={18} color={theme.secondary} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.menuItem} activeOpacity={0.8}>
-          <Ionicons name="settings" size={20} color="#0f766e" />
+          <Ionicons name="settings" size={20} color={theme.primary} />
           <Text style={styles.menuLabel}>Settings</Text>
-          <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
+          <Ionicons name="chevron-forward" size={18} color={theme.secondary} />
         </TouchableOpacity>
       </View>
 
@@ -168,95 +171,101 @@ export default function ProfileTab() {
         onPress={handleSignOut}
         activeOpacity={0.8}
       >
-        <Ionicons name="log-out-outline" size={20} color="#ef4444" />
+        <Ionicons name="log-out-outline" size={20} color={theme.danger} />
         <Text style={styles.signOutText}>Sign out</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8fafc" },
-  loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
-  header: { paddingHorizontal: 20, paddingTop: 56, paddingBottom: 16 },
-  headerTitle: { fontSize: 26, fontWeight: "800", color: "#111827" },
-  userCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginHorizontal: 20,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    gap: 14,
-    marginBottom: 12,
-  },
-  avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: "#ccfbf1",
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  avatarImage: { width: 72, height: 72, borderRadius: 36 },
-  userInfo: { flex: 1, gap: 4 },
-  userName: { fontSize: 18, fontWeight: "800", color: "#111827" },
-  userEmail: { fontSize: 13, color: "#64748b" },
-  verifiedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginTop: 2,
-  },
-  verifiedText: { fontSize: 12, color: "#0f766e", fontWeight: "700" },
-  statsRow: {
-    flexDirection: "row",
-    marginHorizontal: 20,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    padding: 16,
-    marginBottom: 12,
-  },
-  statItem: { flex: 1, alignItems: "center", gap: 4 },
-  statNumber: { fontSize: 18, fontWeight: "800", color: "#111827" },
-  statLabel: { fontSize: 12, color: "#64748b", fontWeight: "600" },
-  statDivider: { width: 1, backgroundColor: "#e2e8f0" },
-  menu: {
-    marginHorizontal: 20,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    marginBottom: 12,
-    overflow: "hidden",
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
-    gap: 12,
-  },
-  menuLabel: { flex: 1, fontSize: 15, fontWeight: "600", color: "#1f2937" },
-  signOutButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginHorizontal: 20,
-    marginBottom: 32,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#fecaca",
-    backgroundColor: "#fff",
-    gap: 8,
-  },
-  signOutText: { fontSize: 15, fontWeight: "700", color: "#ef4444" },
-});
+const getStyles = (theme) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
+    header: { paddingHorizontal: 20, paddingTop: 56, paddingBottom: 16 },
+    headerTitle: { fontSize: 26, fontWeight: "800", color: theme.text },
+    userCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginHorizontal: 20,
+      backgroundColor: theme.surface,
+      borderRadius: 16,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: theme.primarySoft,
+      shadowColor: theme.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 10,
+      elevation: 3,
+      gap: 14,
+      marginBottom: 12,
+    },
+    avatar: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      backgroundColor: theme.primarySoft,
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+    },
+    avatarImage: { width: 72, height: 72, borderRadius: 36 },
+    userInfo: { flex: 1, gap: 4 },
+    userName: { fontSize: 18, fontWeight: "800", color: theme.text },
+    userEmail: { fontSize: 13, color: theme.subtext },
+    verifiedBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      marginTop: 2,
+    },
+    verifiedText: { fontSize: 12, color: theme.primary, fontWeight: "700" },
+    statsRow: {
+      flexDirection: "row",
+      marginHorizontal: 20,
+      backgroundColor: theme.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.border,
+      padding: 16,
+      marginBottom: 12,
+    },
+    statItem: { flex: 1, alignItems: "center", gap: 4 },
+    statNumber: { fontSize: 18, fontWeight: "800", color: theme.text },
+    statLabel: { fontSize: 12, color: theme.subtext, fontWeight: "600" },
+    statDivider: { width: 1, backgroundColor: theme.border },
+    menu: {
+      marginHorizontal: 20,
+      backgroundColor: theme.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.border,
+      marginBottom: 12,
+      overflow: "hidden",
+    },
+    menuItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.surface,
+      gap: 12,
+    },
+    menuLabel: { flex: 1, fontSize: 15, fontWeight: "600", color: theme.text },
+    signOutButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      marginHorizontal: 20,
+      marginBottom: 32,
+      padding: 16,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.danger,
+      backgroundColor: theme.surface,
+      gap: 8,
+    },
+    signOutText: { fontSize: 15, fontWeight: "700", color: theme.danger },
+  });

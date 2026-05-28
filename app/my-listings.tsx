@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -15,22 +15,23 @@ import {
   collection,
   query,
   where,
-  orderBy,
   onSnapshot,
   deleteDoc,
   doc,
 } from "firebase/firestore";
 import { auth, db } from "../services/firebase";
+import { useTheme } from "./theme";
 
 export default function MyListings() {
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
   const router = useRouter();
   const [listings, setListings] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(auth.currentUser));
 
   useEffect(() => {
     const uid = auth.currentUser?.uid;
     if (!uid) {
-      setLoading(false);
       return;
     }
 
@@ -144,73 +145,79 @@ export default function MyListings() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8fafc" },
-  loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 56,
-    paddingBottom: 16,
-    gap: 12,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-  },
-  headerTitle: { fontSize: 22, fontWeight: "800", color: "#111827" },
-  listContent: { paddingHorizontal: 20, paddingBottom: 32 },
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    marginBottom: 12,
-    overflow: "hidden",
-  },
-  cardImage: {
-    width: 80,
-    height: 80,
-    backgroundColor: "#f1f5f9",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cardImg: { width: 80, height: 80, resizeMode: "cover" },
-  cardBody: { flex: 1, padding: 12, gap: 3 },
-  cardTitle: { fontSize: 14, fontWeight: "700", color: "#111827" },
-  cardPrice: { fontSize: 15, fontWeight: "800", color: "#0f766e" },
-  cardCategory: { fontSize: 12, color: "#94a3b8", textTransform: "capitalize" },
-  actionButtons: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: 12,
-    padding: 12,
-  },
-  editButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: "#d1fae5",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  deleteButton: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-  empty: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 80,
-    gap: 10,
-  },
-  emptyTitle: { fontSize: 18, fontWeight: "800", color: "#111827" },
-  emptyText: { fontSize: 14, color: "#64748b", textAlign: "center" },
-});
+const getStyles = (theme) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 20,
+      paddingTop: 56,
+      paddingBottom: 16,
+      gap: 12,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: theme.surface,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    headerTitle: { fontSize: 22, fontWeight: "800", color: theme.text },
+    listContent: { paddingHorizontal: 20, paddingBottom: 32 },
+    card: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.surface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: theme.primarySoft,
+      shadowColor: theme.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 10,
+      elevation: 3,
+      marginBottom: 12,
+      overflow: "hidden",
+    },
+    cardImage: {
+      width: 80,
+      height: 80,
+      backgroundColor: theme.card,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    cardImg: { width: 80, height: 80, resizeMode: "cover" },
+    cardBody: { flex: 1, padding: 12, gap: 3 },
+    cardTitle: { fontSize: 14, fontWeight: "700", color: theme.text },
+    cardPrice: { fontSize: 15, fontWeight: "800", color: theme.primary },
+    cardCategory: { fontSize: 12, color: theme.secondary, textTransform: "capitalize" },
+    actionButtons: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "flex-end",
+      gap: 12,
+      padding: 12,
+    },
+    editButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      backgroundColor: theme.primarySoft,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    deleteButton: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+    empty: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingTop: 80,
+      gap: 10,
+    },
+    emptyTitle: { fontSize: 18, fontWeight: "800", color: theme.text },
+    emptyText: { fontSize: 14, color: theme.subtext, textAlign: "center" },
+  });

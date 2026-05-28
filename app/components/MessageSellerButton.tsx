@@ -1,11 +1,12 @@
 // components/MessageSellerButton.tsx
 // ─────────────────────────────────────────────────────────────────────────────
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { auth } from '../../services/firebase';
 import { ChatListing } from '../../services/chatService';
+import { useTheme } from '../theme';
 
 interface Props {
   listing: ChatListing & { sellerUid: string; sellerName: string };
@@ -13,6 +14,8 @@ interface Props {
 
 // Named export for direct import usage
 export function MessageSellerButton({ listing }: Props) {
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const currentUser = auth.currentUser;
@@ -60,20 +63,21 @@ export function MessageSellerButton({ listing }: Props) {
 
 export default MessageSellerButton;
 
-const styles = StyleSheet.create({
-  btn: {
-    backgroundColor: '#0f766e',
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 20,
-    marginBottom: 16,
-    shadowColor: '#0f766e',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  btnText: { fontSize: 16, fontWeight: '700', color: '#fff', letterSpacing: 0.2 },
-});
+const getStyles = (theme) =>
+  StyleSheet.create({
+    btn: {
+      backgroundColor: theme.primary,
+      borderRadius: 14,
+      paddingVertical: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginHorizontal: 20,
+      marginBottom: 16,
+      shadowColor: theme.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    btnText: { fontSize: 16, fontWeight: '700', color: theme.primaryText, letterSpacing: 0.2 },
+  });

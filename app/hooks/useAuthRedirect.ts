@@ -15,7 +15,7 @@ export function useAuthRedirect() {
       if (!user) {
         console.log('👉 Redirecting to /login');
         setTimeout(() => {
-          router.replace('/login' as any);
+          router.replace('/login');
           setIsReady(true);
         }, 100);
         return;
@@ -40,7 +40,7 @@ export function useAuthRedirect() {
     });
 
     return unsubscribe;
-  }, []);
+  }, [router]);
 
   return isReady;
 }
