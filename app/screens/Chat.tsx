@@ -1,0 +1,540 @@
+// app/screens/chat.tsx
+// ─────────────────────────────────────────────────────────────────────────────
+// Real-time chat screen — Expo Router version
+//
+// Navigate here with:
+//   router.push({
+//     pathname: '/screens/chat',
+//     params: {
+//       conversationId: '...',   // optional — omit when buyer opens fresh chat
+//       listingId: listing.id,
+//       listingTitle: listing.title,
+//       listingImage: listing.image ?? '',
+//       listingPrice: String(listing.price ?? ''),
+//       sellerUid: listing.sellerUid,
+//       sellerName: listing.sellerName,
+//       otherUid: '<their uid>',
+//       otherName: '<their display name>',
+//     },
+//   });
+// ─────────────────────────────────────────────────────────────────────────────
+
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  Image,
+  ActivityIndicator,
+  SafeAreaView,
+  ListRenderItemInfo,
+} from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { Timestamp } from "firebase/firestore";
+import { auth } from "../../services/firebase";
+import {
+  getOrCreateConversation,
+  sendMessage,
+  subscribeToMessages,
+  markConversationAsRead,
+  Message,
+} from "../../services/chatService";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface DateSeparator {
+  id: string;
+  type: "separator";
+  label: string;
+}
+
+type ListItem = Message | DateSeparator;
+
+function isSeparator(item: ListItem): item is DateSeparator {
+  return (item as DateSeparator).type === "separator";
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function toDate(ts: Timestamp | null | undefined): Date | null {
+  if (!ts) return null;
+  return ts.toDate ? ts.toDate() : new Date(ts as unknown as number);
+}
+
+function formatTime(ts: Timestamp | null | undefined): string {
+  const d = toDate(ts);
+  return d
+    ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : "";
+}
+
+function formatDateLabel(ts: Timestamp | null | undefined): string {
+  const d = toDate(ts);
+  if (!d) return "";
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return "Today";
+  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return d.toLocaleDateString("en-PH", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+// ── Screen ────────────────────────────────────────────────────────────────────
+
+export default function ChatScreen() {
+  const router = useRouter();
+
+  // Expo Router passes all params as strings
+  const {
+    conversationId: initialConvoId,
+    listingId,
+    listingTitle,
+    listingImage,
+    listingPrice,
+    sellerUid,
+    sellerName,
+    otherUid,
+    otherName,
+  } = useLocalSearchParams<{
+    conversationId?: string;
+    listingId: string;
+    listingTitle: string;
+    listingImage?: string;
+    listingPrice?: string;
+    sellerUid: string;
+    sellerName: string;
+    otherUid: string;
+    otherName: string;
+  }>();
+
+  const currentUser = auth.currentUser!;
+  const participants = [currentUser.uid, otherUid];
+
+  const [conversationId, setConversationId] = useState<string | null>(
+    initialConvoId ?? null,
+  );
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputText, setInputText] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+
+  const flatListRef = useRef<FlatList<ListItem>>(null);
+
+  // ── Init conversation + subscribe ──────────────────────────────────────────
+  useEffect(() => {
+    let unsub: (() => void) | undefined;
+
+    const init = async () => {
+      try {
+        let convoId = conversationId;
+
+        if (!convoId) {
+          convoId = await getOrCreateConversation(currentUser.uid, otherUid, {
+            id: listingId,
+            title: listingTitle,
+            image: listingImage || null,
+            price: listingPrice || null,
+            sellerUid,
+            sellerName,
+            buyerName: currentUser.displayName ?? "Buyer",
+          });
+          setConversationId(convoId);
+        }
+
+        unsub = subscribeToMessages(convoId, (msgs) => {
+          setMessages(msgs);
+          setLoading(false);
+        });
+
+        await markConversationAsRead(convoId, currentUser.uid);
+      } catch (err) {
+        console.error("Chat init error:", err);
+        setLoading(false);
+      }
+    };
+
+    init();
+    return () => unsub?.();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Mark read on new messages ──────────────────────────────────────────────
+  useEffect(() => {
+    if (conversationId && messages.length > 0) {
+      markConversationAsRead(conversationId, currentUser.uid);
+    }
+  }, [messages, conversationId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Auto-scroll ────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(
+        () => flatListRef.current?.scrollToEnd({ animated: true }),
+        100,
+      );
+    }
+  }, [messages]);
+
+  // ── Send ───────────────────────────────────────────────────────────────────
+  const handleSend = useCallback(async () => {
+    const text = inputText.trim();
+    if (!text || sending || !conversationId) return;
+    setSending(true);
+    setInputText("");
+    try {
+      await sendMessage(conversationId, currentUser.uid, text, participants);
+    } catch (err) {
+      console.error("Send error:", err);
+      setInputText(text);
+    } finally {
+      setSending(false);
+    }
+  }, [inputText, sending, conversationId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Inject date separators ─────────────────────────────────────────────────
+  const listItems = useMemo<ListItem[]>(() => {
+    const result: ListItem[] = [];
+    let lastDateStr: string | null = null;
+    for (const msg of messages) {
+      const d = toDate(msg.createdAt);
+      if (d) {
+        const ds = d.toDateString();
+        if (ds !== lastDateStr) {
+          result.push({
+            id: `sep-${ds}`,
+            type: "separator",
+            label: formatDateLabel(msg.createdAt),
+          });
+          lastDateStr = ds;
+        }
+      }
+      result.push(msg);
+    }
+    return result;
+  }, [messages]);
+
+  // ── Render item ────────────────────────────────────────────────────────────
+  const renderItem = useCallback(
+    ({ item }: ListRenderItemInfo<ListItem>) => {
+      if (isSeparator(item)) {
+        return (
+          <View style={styles.separator}>
+            <View style={styles.separatorLine} />
+            <Text style={styles.separatorText}>{item.label}</Text>
+            <View style={styles.separatorLine} />
+          </View>
+        );
+      }
+      const isMine = item.senderId === currentUser.uid;
+      return (
+        <View
+          style={[
+            styles.bubbleWrapper,
+            isMine ? styles.myWrapper : styles.theirWrapper,
+          ]}
+        >
+          <View
+            style={[
+              styles.bubble,
+              isMine ? styles.myBubble : styles.theirBubble,
+            ]}
+          >
+            <Text
+              style={[
+                styles.bubbleText,
+                isMine ? styles.myText : styles.theirText,
+              ]}
+            >
+              {item.text}
+            </Text>
+          </View>
+          <Text
+            style={[
+              styles.bubbleTime,
+              isMine ? styles.timeRight : styles.timeLeft,
+            ]}
+          >
+            {formatTime(item.createdAt)}
+            {isMine && (
+              <Text style={styles.receipt}>{item.read ? " ✓✓" : " ✓"}</Text>
+            )}
+          </Text>
+        </View>
+      );
+    },
+    [currentUser.uid],
+  );
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  return (
+    <SafeAreaView style={styles.safe}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Ionicons name="chevron-back" size={24} color="#111827" />
+        </TouchableOpacity>
+        <View style={styles.headerCenter}>
+          <View style={styles.avatar}>
+            <Ionicons name="person" size={18} color="#0f766e" />
+          </View>
+          <View>
+            <Text style={styles.headerName} numberOfLines={1}>
+              {otherName}
+            </Text>
+            <Text style={styles.headerSub} numberOfLines={1}>
+              {listingTitle}
+            </Text>
+          </View>
+        </View>
+        <View style={{ width: 32 }} />
+      </View>
+
+      {/* Listing card */}
+      <TouchableOpacity
+        style={styles.listingCard}
+        activeOpacity={0.85}
+        onPress={() =>
+          router.push({
+            pathname: "/listing/[id]",
+            params: { id: listingId },
+          })
+        }
+      >
+        {listingImage ? (
+          <Image source={{ uri: listingImage }} style={styles.listingImg} />
+        ) : (
+          <View style={styles.listingImgPlaceholder}>
+            <Ionicons name="image-outline" size={20} color="#94a3b8" />
+          </View>
+        )}
+        <View style={styles.listingInfo}>
+          <Text style={styles.listingTitle} numberOfLines={1}>
+            {listingTitle}
+          </Text>
+          {listingPrice ? (
+            <Text style={styles.listingPrice}>
+              ₱{Number(listingPrice).toLocaleString()}
+            </Text>
+          ) : null}
+        </View>
+        <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
+      </TouchableOpacity>
+
+      {/* Messages + input */}
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 70}
+      >
+        {loading ? (
+          <View style={styles.loadingWrap}>
+            <ActivityIndicator size="large" color="#0f766e" />
+          </View>
+        ) : (
+            <FlatList<ListItem>
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+            ref={flatListRef}
+            data={listItems}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={[styles.msgList, { flexGrow: 1, paddingBottom: 12 }]}
+            showsVerticalScrollIndicator={false}
+            onContentSizeChange={() =>
+              flatListRef.current?.scrollToEnd({ animated: false })
+            }
+            renderItem={renderItem}
+            ListEmptyComponent={
+              <View style={styles.emptyChat}>
+                <Ionicons
+                  name="chatbubble-ellipses-outline"
+                  size={40}
+                  color="#cbd5e1"
+                />
+                <Text style={styles.emptyChatText}>
+                  Say hi to start the conversation!
+                </Text>
+              </View>
+            }
+          />
+        )}
+
+        <View style={styles.inputBar}>
+          <TextInput
+            style={styles.input}
+            value={inputText}
+            onChangeText={setInputText}
+            placeholder="Type a message..."
+            placeholderTextColor="#94a3b8"
+            multiline
+            maxLength={500}
+            onSubmitEditing={handleSend}
+            returnKeyType="send"
+            blurOnSubmit={false}
+          />
+          <TouchableOpacity
+            style={[
+              styles.sendBtn,
+              (!inputText.trim() || sending) && styles.sendBtnOff,
+            ]}
+            onPress={handleSend}
+            disabled={!inputText.trim() || sending}
+            activeOpacity={0.8}
+          >
+            {sending ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons name="send" size={18} color="#fff" />
+            )}
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: "#fff" },
+  flex: { flex: 1 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f5f9",
+    gap: 8,
+  },
+  backBtn: { padding: 4 },
+  headerCenter: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  avatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#ccfbf1",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerName: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#111827",
+    maxWidth: 170,
+  },
+  headerSub: {
+    fontSize: 12,
+    color: "#0f766e",
+    fontWeight: "600",
+    maxWidth: 170,
+  },
+  listingCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 16,
+    marginVertical: 8,
+    padding: 10,
+    backgroundColor: "#f8fafc",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    gap: 10,
+  },
+  listingImg: { width: 44, height: 44, borderRadius: 8 },
+  listingImgPlaceholder: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: "#e2e8f0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  listingInfo: { flex: 1 },
+  listingTitle: { fontSize: 13, fontWeight: "600", color: "#111827" },
+  listingPrice: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#0f766e",
+    marginTop: 2,
+  },
+  msgList: { paddingHorizontal: 16, paddingVertical: 12, gap: 4 },
+  loadingWrap: { flex: 1, alignItems: "center", justifyContent: "center" },
+  emptyChat: { alignItems: "center", marginTop: 60, gap: 10 },
+  emptyChatText: { fontSize: 14, color: "#94a3b8", textAlign: "center" },
+  separator: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 12,
+    gap: 8,
+  },
+  separatorLine: { flex: 1, height: 1, backgroundColor: "#e2e8f0" },
+  separatorText: { fontSize: 11, color: "#94a3b8", fontWeight: "600" },
+  bubbleWrapper: { marginBottom: 4, maxWidth: "78%" },
+  myWrapper: { alignSelf: "flex-end", alignItems: "flex-end" },
+  theirWrapper: { alignSelf: "flex-start", alignItems: "flex-start" },
+  bubble: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 18 },
+  myBubble: { backgroundColor: "#0f766e", borderBottomRightRadius: 4 },
+  theirBubble: { backgroundColor: "#f1f5f9", borderBottomLeftRadius: 4 },
+  bubbleText: { fontSize: 15, lineHeight: 21 },
+  myText: { color: "#fff" },
+  theirText: { color: "#111827" },
+  bubbleTime: {
+    fontSize: 10,
+    color: "#94a3b8",
+    marginTop: 2,
+    marginHorizontal: 4,
+  },
+  timeRight: { textAlign: "right" },
+  timeLeft: { textAlign: "left" },
+  receipt: { color: "#0f766e" },
+  inputBar: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#f1f5f9",
+    backgroundColor: "#fff",
+    gap: 10,
+  },
+  input: {
+    flex: 1,
+    minHeight: 42,
+    maxHeight: 100,
+    backgroundColor: "#f8fafc",
+    borderRadius: 21,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: "#111827",
+  },
+  sendBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "#0f766e",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sendBtnOff: { backgroundColor: "#94a3b8" },
+});
