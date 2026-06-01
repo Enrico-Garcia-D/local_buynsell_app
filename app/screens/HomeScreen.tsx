@@ -1,20 +1,30 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { signOut } from '../../services/auth';
 import { useTheme } from '../theme';
+import { SignOutConfirmation } from '../components/SignOutConfirmation';
 
 export default function HomeScreen() {
   const theme = useTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
+    setShowConfirm(true);
+  };
+
+  const handleConfirmSignOut = async () => {
     try {
+      setLoading(true);
       console.log('Home screen sign-out pressed');
       await signOut();
       console.log('Home screen sign-out: signOut() returned');
     } catch (error) {
       console.error('Sign out failed:', error);
+      setShowConfirm(false);
+      setLoading(false);
     }
   };
 
@@ -23,13 +33,20 @@ export default function HomeScreen() {
       <View style={styles.iconWrap}>
         <Ionicons name="checkmark-circle" size={46} color="#0f766e" />
       </View>
-      <Text style={styles.title}>Welcome to M-Place</Text>
+      <Text style={styles.title}>Welcome to The MarketPlace</Text>
       <Text style={styles.subtitle}>
         Your account is verified. You can now buy and sell with trusted people nearby.
       </Text>
       <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut} activeOpacity={0.82}>
         <Text style={styles.signOutText}>Sign out</Text>
       </TouchableOpacity>
+      <SignOutConfirmation
+        visible={showConfirm}
+        theme={theme}
+        onConfirm={handleConfirmSignOut}
+        onCancel={() => setShowConfirm(false)}
+        loading={loading}
+      />
     </View>
   );
 }

@@ -111,7 +111,7 @@ export default function MessagesTab() {
   const [loading, setLoading] = useState(true);
   const [userStatus, setUserStatus] = useState<string | null>(null);
 
-  // Fix 1: Fixed the unclosed fetchStatus useEffect
+  //  Fixed the unclosed fetchStatus useEffect
   useEffect(() => {
     const fetchStatus = async () => {
       if (!uid) return;
@@ -125,7 +125,7 @@ export default function MessagesTab() {
       }
     };
     fetchStatus();
-  }, [uid]); // Added dependency array
+  }, [uid]); 
 
   useEffect(() => {
     if (!uid) return;
@@ -247,14 +247,14 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     container: { flex: 1, backgroundColor: theme.background },
     header: { paddingHorizontal: 20, paddingTop: 56, paddingBottom: 16 },
     headerTitle: { fontSize: 26, fontWeight: "800", color: theme.text },
-    list: { paddingHorizontal: 20, paddingBottom: 100 },
+    list: { paddingHorizontal: 4, paddingBottom: 100 },
     convoItem: {
       flexDirection: "row",
       alignItems: "center",
       padding: 14,
-      marginBottom: 10,
+      marginBottom: 6,
       backgroundColor: theme.surface,
-      borderRadius: 16,
+      borderRadius: 6,
       gap: 12,
     },
     convoAvatar: {

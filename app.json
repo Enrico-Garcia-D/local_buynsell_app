@@ -1,13 +1,19 @@
 {
   "expo": {
     "name": "M-Place",
-    "slug": "M-Place",
+    "slug": "the-marketplace",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mplace",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "extra": {
+      "eas": {
+        "projectId": "6ea8ee4e-af75-43ae-aae5-ea3c839917b1"
+      },
+      "router": {}
+    },
     "ios": {
       "supportsTablet": true
     },
@@ -50,6 +56,7 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "owner": "emlg.dev"
   }
 }

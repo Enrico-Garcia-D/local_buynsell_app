@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import { signOut } from "../../services/auth";
 import { auth, db } from "../../services/firebase";
 import { useTheme } from "../theme";
+import { SignOutConfirmation } from "../components/SignOutConfirmation";
 import {
   doc,
   getDoc,
@@ -39,6 +40,8 @@ export default function ProfileTab() {
   const [loading, setLoading] = useState(true);
   const [reviews, setReviews] = useState<SellerReview[]>([]);
   const { savedIds } = useSavedItems();
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     if (!uid) return;
@@ -80,13 +83,20 @@ export default function ProfileTab() {
     };
   }, [uid]);
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
+    setShowSignOutConfirm(true);
+  };
+
+  const handleConfirmSignOut = async () => {
     try {
+      setSigningOut(true);
       console.log("Profile sign-out button pressed");
       await signOut();
       console.log("Profile sign-out: signOut() returned");
     } catch (error) {
       console.error("Sign out failed:", error);
+      setShowSignOutConfirm(false);
+      setSigningOut(false);
     }
   };
 
@@ -110,9 +120,9 @@ export default function ProfileTab() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
+        <Text style={styles.headerTitle}></Text>
       </View>
-
+    
       {/* Verification Banner - Shows only when pending */}
       {user?.status === "pending" && (
         <View style={styles.pendingBanner}>
@@ -286,9 +296,26 @@ export default function ProfileTab() {
         >
           <Ionicons name="star" size={20} color={theme.primary} />
           <Text style={styles.menuLabel}>Reviews</Text>
-          <Text style={styles.reviewsBadge}>
-            {reviews.length > 0 ? reviews.length : ""}
-          </Text>
+          {reviews.length > 0 && (
+            <View
+              style={{
+                backgroundColor: theme.primarySoft,
+                paddingHorizontal: 8,
+                borderRadius: 10,
+                marginRight: 5,
+              }}
+            >
+              <Text
+                style={{
+                  color: theme.primary,
+                  fontWeight: "700",
+                  fontSize: 12,
+                }}
+              >
+                {reviews.length}
+              </Text>
+            </View>
+          )}
           <Ionicons name="chevron-forward" size={18} color={theme.secondary} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.menuItem} activeOpacity={0.8}>
@@ -307,6 +334,14 @@ export default function ProfileTab() {
         <Ionicons name="log-out-outline" size={20} color={theme.danger} />
         <Text style={styles.signOutText}>Sign out</Text>
       </TouchableOpacity>
+
+      <SignOutConfirmation
+        visible={showSignOutConfirm}
+        theme={theme}
+        onConfirm={handleConfirmSignOut}
+        onCancel={() => setShowSignOutConfirm(false)}
+        loading={signingOut}
+      />
     </ScrollView>
   );
 }
@@ -339,15 +374,15 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       marginBottom: 12,
     },
     avatar: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
+      width: 100,
+      height: 100,
+      borderRadius: 50,
       backgroundColor: theme.primarySoft,
       alignItems: "center",
       justifyContent: "center",
       overflow: "hidden",
     },
-    avatarImage: { width: 72, height: 72, borderRadius: 36 },
+    avatarImage: { width: 100, height: 100, borderRadius: 50 },
     userInfo: { flex: 1, gap: 4 },
     userName: { fontSize: 18, fontWeight: "800", color: theme.text },
     userEmail: { fontSize: 13, color: theme.subtext },
@@ -449,8 +484,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       marginHorizontal: 10,
       marginBottom: 32,
       padding: 16,
-      borderRadius: 12,
-      borderWidth: 1,
+      borderRadius: 20,
       borderColor: theme.danger,
       backgroundColor: theme.surface,
       gap: 8,

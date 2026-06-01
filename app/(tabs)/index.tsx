@@ -247,7 +247,6 @@ export default function HomeTab() {
               color="#0f766e"
             />
           </TouchableOpacity>
-          // Header Title --------------------------------------
           <Text style={styles.headerTitle}>The MarketPlace</Text>
           {locationOpen && (
             <View style={styles.locationMenu}>
@@ -574,7 +573,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) => {
       alignItems: "center",
       gap: 6,
       backgroundColor: surfaceGlass,
-      borderRadius: 999,
+      borderRadius: 20,
       paddingHorizontal: 14,
       paddingVertical: 10,
       borderWidth: 1,
@@ -591,7 +590,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) => {
       top: 54,
       left: 0,
       width: 260,
-      borderRadius: 18,
+      borderRadius: 20,
       backgroundColor: surfaceGlass,
       borderWidth: 1,
       borderColor: glassBorder,
@@ -678,7 +677,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) => {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: "rgba(255,255,255,0.06)",
-      borderRadius: 18,
+      borderRadius: 20,
       borderWidth: 1,
       borderColor: "rgba(255,255,255,0.14)",
       paddingHorizontal: 16,
@@ -693,7 +692,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) => {
     searchInput: { flex: 1, fontSize: 15, color: theme.text },
     sortButton: {
       height: 52,
-      borderRadius: 18,
+      borderRadius: 20,
       borderWidth: 1,
       borderColor: "rgba(255,255,255,0.14)",
       backgroundColor: "rgba(255,255,255,0.06)",
@@ -734,7 +733,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) => {
     card: {
       width: "49%",
       backgroundColor: "rgba(255,255,255,0.06)",
-      borderRadius: 24,
+      borderRadius: 6,
       borderWidth: 1,
       borderColor: "rgba(255,255,255,0.10)",
       shadowColor: "rgba(0,0,0,0.14)",
@@ -812,14 +811,14 @@ const getStyles = (theme: ReturnType<typeof useTheme>) => {
       gap: 14,
       paddingVertical: 14,
       paddingHorizontal: 12,
-      borderRadius: 14,
+      borderRadius: 20,
       marginBottom: 6,
     },
     sortOptionActive: { backgroundColor: "#f0fdf9" },
     sortOptionIcon: {
       width: 38,
       height: 38,
-      borderRadius: 12,
+      borderRadius: 20,
       backgroundColor: theme.border,
       alignItems: "center",
       justifyContent: "center",

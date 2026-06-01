@@ -9,7 +9,13 @@ import {
   configureNotifications,
 } from '../services/notificationService';
 
-configureNotifications();
+// Configure notifications on app startup
+try {
+  configureNotifications();
+  console.log("[App] Notifications configured on startup");
+} catch (error) {
+  console.error("[App] Failed to configure notifications:", error);
+}
 
 export default function RootLayout() {
   const isReady = useAuthRedirect();
@@ -17,8 +23,11 @@ export default function RootLayout() {
   const theme = useTheme();
 
   useEffect(() => {
+    console.log("[App] Setting up notification response handler");
     return addNotificationResponseHandler((data) => {
+      console.log("[App] Notification response received:", data);
       if (data.type === 'new_message' && data.conversationId) {
+        console.log("[App] Navigating to chat screen");
         router.push({
           pathname: '/chat',
           params: {
@@ -32,7 +41,10 @@ export default function RootLayout() {
           },
         } as any);
       } else if (data.type === 'new_review') {
+        console.log("[App] Navigating to reviews screen");
         router.push('/reviews' as any);
+      } else {
+        console.warn("[App] Unknown notification type:", data.type);
       }
     });
   }, [router]);

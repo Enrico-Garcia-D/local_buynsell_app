@@ -1,4 +1,3 @@
-// app/screens/_layout.tsx
 // ─────────────────────────────────────────────────────────────────────────────
 // Stack layout for all screens under app/screens/
 // This file is REQUIRED for Expo Router to recognize /screens/chat as a valid route.

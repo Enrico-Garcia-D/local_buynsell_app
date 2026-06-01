@@ -722,9 +722,9 @@ function getStyles(theme: ReturnType<typeof useTheme>) {
 
     // Photo
     photoBox: {
-      marginHorizontal: 16,
+      marginHorizontal: 8,
       height: 200,
-      borderRadius: 16,
+      borderRadius: 6,
       overflow: "hidden",
       borderWidth: 1,
       borderColor: theme.border,
@@ -760,14 +760,14 @@ function getStyles(theme: ReturnType<typeof useTheme>) {
     photoPlaceholderSub: { fontSize: 12, color: theme.subtext },
 
     // Form
-    form: { paddingHorizontal: 16, gap: 20, paddingBottom: 40 },
+    form: { paddingHorizontal: 8, gap: 20, paddingBottom: 40 },
     field: { gap: 8 },
     labelRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
     label: { fontSize: 14, fontWeight: "700", color: theme.text },
     charCount: { fontSize: 12, color: theme.subtext },
     input: {
       backgroundColor: theme.surface,
-      borderRadius: 12,
+      borderRadius: 6,
       borderWidth: 1,
       borderColor: theme.border,
       paddingHorizontal: 14,
@@ -786,8 +786,8 @@ function getStyles(theme: ReturnType<typeof useTheme>) {
       gap: 6,
       borderWidth: 1,
       borderColor: theme.border,
-      borderRadius: 12,
-      paddingHorizontal: 12,
+      borderRadius: 20,
+      paddingHorizontal: 8,
       paddingVertical: 12,
       backgroundColor: theme.surface,
     },
@@ -857,7 +857,7 @@ function getStyles(theme: ReturnType<typeof useTheme>) {
       gap: 6,
       paddingHorizontal: 16,
       paddingVertical: 14,
-      borderRadius: 12,
+      borderRadius: 20,
       borderWidth: 1.5,
       borderColor: theme.primary,
       backgroundColor: theme.surface,
@@ -870,7 +870,7 @@ function getStyles(theme: ReturnType<typeof useTheme>) {
       justifyContent: "center",
       gap: 8,
       minHeight: 52,
-      borderRadius: 12,
+      borderRadius: 20,
       backgroundColor: "#0f766e",
     },
     previewButtonText: { color: "#fff", fontSize: 15, fontWeight: "800" },

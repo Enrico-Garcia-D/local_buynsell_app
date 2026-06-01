@@ -1,20 +1,30 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router'; // Added
 import { signOut } from '../../services/auth';
 import { useTheme } from '../theme';
+import { SignOutConfirmation } from '../components/SignOutConfirmation';
 
 export default function PendingScreen() {
   const theme = useTheme();
   const styles = useMemo(() => getStyles(theme), [theme]);
   const router = useRouter(); // Added
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
+    setShowConfirm(true);
+  };
+
+  const handleConfirmSignOut = async () => {
     try {
+      setLoading(true);
       await signOut();
     } catch (error) {
       console.error('Sign out failed:', error);
+      setShowConfirm(false);
+      setLoading(false);
     }
   };
 
@@ -57,6 +67,13 @@ export default function PendingScreen() {
           <Text style={styles.signOutText}>Sign out</Text>
         </TouchableOpacity>
       </View>
+      <SignOutConfirmation
+        visible={showConfirm}
+        theme={theme}
+        onConfirm={handleConfirmSignOut}
+        onCancel={() => setShowConfirm(false)}
+        loading={loading}
+      />
     </View>
   );
 }
