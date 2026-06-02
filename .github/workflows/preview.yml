@@ -32,7 +32,7 @@ jobs:
 
       # 4. Install your project's packages
       - name: Install dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       # 5. Build a preview for Android (Creates the APK automatically)
       - name: Build Android Preview
