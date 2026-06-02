@@ -26,7 +26,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.MPlace"
+      "package": "com.anonymous.MPlace",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
