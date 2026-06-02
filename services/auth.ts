@@ -13,7 +13,14 @@ export const signInWithGoogle = async () => {
     await GoogleSignin.hasPlayServices();
 
     const userInfo = await GoogleSignin.signIn();
-    const idToken = userInfo.idToken;
+
+    if (userInfo.type !== 'success') {
+      const error = new Error('Sign in was cancelled');
+      (error as any).code = statusCodes.SIGN_IN_CANCELLED;
+      throw error;
+    }
+
+    const idToken = userInfo.data.idToken;
 
     if (!idToken) throw new Error('No ID token found');
 

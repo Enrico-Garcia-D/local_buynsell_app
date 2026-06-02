@@ -10,10 +10,10 @@ export function useAuthRedirect() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log('🔔 onAuthStateChanged fired. user:', user?.uid ?? 'null');
+      console.log('Auth state changed. user:', user?.uid ?? 'null');
 
       if (!user) {
-        console.log('👉 Redirecting to /login');
+        console.log('Redirecting to login screen');
         setTimeout(() => {
           router.replace('/login');
           setIsReady(true);
@@ -23,15 +23,20 @@ export function useAuthRedirect() {
 
       try {
         const status = await getCurrentUserStatus(user.uid);
-        console.log('👤 Status:', status);
+        console.log('User status:', status);
+
         setTimeout(() => {
-          if (status === 'verified') router.replace('/home');
-          else if (status === 'needs_id') router.replace('/id-upload');
-          else router.replace('/pending');
+          if (status === 'verified') {
+            router.replace('/home');
+          } else if (status === 'needs_id') {
+            router.replace('/id-upload');
+          } else {
+            router.replace('/pending');
+          }
           setIsReady(true);
         }, 100);
       } catch (err) {
-        console.error('Error:', err);
+        console.error('Error resolving auth redirect:', err);
         setTimeout(() => {
           router.replace('/login' as any);
           setIsReady(true);
