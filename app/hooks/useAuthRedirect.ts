@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { getCurrentUserStatus } from '../../services/auth';
+import { registerPushToken } from '../../services/notificationService';
 
 export function useAuthRedirect() {
   const router = useRouter();
@@ -27,6 +28,9 @@ export function useAuthRedirect() {
 
         setTimeout(() => {
           if (status === 'verified') {
+            void registerPushToken(user.uid).catch((error) => {
+              console.warn('Push token registration failed during auth redirect:', error);
+            });
             router.replace('/home');
           } else if (status === 'needs_id') {
             router.replace('/id-upload');
